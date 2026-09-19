@@ -213,7 +213,7 @@ def enviar_correo(destinatario, asunto, cuerpo, archivo_bytes, nombre_archivo):
 
     msg = MIMEMultipart()
     msg["From"] = remitente
-    msg["To"] = destinatario
+    msg["To"] = ", ".join(destinatario)
     msg["Subject"] = asunto
     msg.attach(MIMEText(cuerpo, "plain"))
 
@@ -320,6 +320,8 @@ with st.form("form_cotizacion"):
 
 if enviar:
     correo_destino = st.secrets["EMAIL_ADDRESS"]
+    correo_destino_2 = st.secrets.get("CORREO_DESTINO_2", "")
+    lista_destinatarios = [correo_destino] + ([correo_destino_2] if correo_destino_2 else [])
 
     prendas_validas = prendas_df.dropna(subset=["Prenda"])
     prendas_validas = prendas_validas[prendas_validas["Prenda"].astype(str).str.strip() != ""]
@@ -346,7 +348,7 @@ if enviar:
         try:
             buffer.seek(0)
             enviar_correo(
-                destinatario=correo_destino,
+                destinatario=lista_destinatarios,
                 asunto=f"Cotización — {institucion}",
                 cuerpo=(
                     f"Buen día,\n\nAdjunto la cotización para {institucion} "
@@ -356,7 +358,7 @@ if enviar:
                 archivo_bytes=buffer,
                 nombre_archivo=nombre_archivo,
             )
-            st.success(f"Correo enviado a {correo_destino} ✅")
+            st.success(f"Correo enviado a {', '.join(lista_destinatarios)} ✅")
         except Exception as e:
             st.warning(
                 "El documento se generó bien, pero no se pudo enviar el correo automáticamente. "
